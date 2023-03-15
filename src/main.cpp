@@ -215,7 +215,9 @@
 
 #include <SPI.h>
 #include <Wire.h>
-
+//stop ZeroTimer error on esp32, not used but platformio fails to build anyway
+#define _ADAFRUIT_ZEROTIMER_
+//stop double touch definition by STMPE610 so we can switch to wokwi FT6206 i2c touch driver
 #define _ADAFRUIT_STMPE610H_
 class Adafruit_STMPE610 {
   private:
@@ -256,10 +258,11 @@ class Adafruit_STMPE610 {
 #include <lvgl.h>
 // #include <TouchScreen.h>
 #include <Adafruit_ILI9341.h>
-#include <Adafruit_FT6206.h>
 
-// The FT6206 uses hardware I2C (SCL/SDA)
-Adafruit_FT6206 ctp = Adafruit_FT6206();
+////For now touch defined TP_Point occurs in both STMPE610 (in lvgl_GLUE) and FT6206...
+// #include <Adafruit_FT6206.h>
+// // The FT6206 uses hardware I2C (SCL/SDA)
+// Adafruit_FT6206 ctp = Adafruit_FT6206();
 
 // // The display also uses hardware SPI, plus #9 & #10
 // #define TFT_CS 10
