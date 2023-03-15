@@ -13,189 +13,6 @@
  ****************************************************/
 
 
-//#include <Adafruit_GFX.h>    // Core graphics library
-// #include <SPI.h>       // this is needed for display
-// #include <Adafruit_ILI9341.h>
-// #include <Arduino.h>      // this is needed for FT6206
-// #include <Adafruit_FT6206.h>
-
-// // The FT6206 uses hardware I2C (SCL/SDA)
-// Adafruit_FT6206 ctp = Adafruit_FT6206();
-
-// // // The display also uses hardware SPI, plus #9 & #10
-// // #define TFT_CS 10
-// // #define TFT_DC 9
-// #define TFT_DC 2
-// #define TFT_CS 15
-// Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
-
-// // Size of the color selection boxes and the paintbrush size
-// #define BOXSIZE 40
-// #define PENRADIUS 3
-// int oldcolor, currentcolor;
-
-// void setup(void) {
-//   //while (!Serial);     // used for leonardo debugging
-
-//   Serial.begin(115200);
-//   Serial.println(F("Cap Touch Paint!"));
-  
-//   Wire.setPins(10, 8); // redefine first I2C port to be on pins 10/8
-//   tft.begin();
-
-//   if (! ctp.begin(40)) {  // pass in 'sensitivity' coefficient
-//     Serial.println("Couldn't start FT6206 touchscreen controller");
-//     while (1);
-//   }
-
-//   Serial.println("Capacitive touchscreen started");
-  
-//   tft.fillScreen(ILI9341_BLACK);
-  
-//   // make the color selection boxes
-//   tft.fillRect(0, 0, BOXSIZE, BOXSIZE, ILI9341_RED);
-//   tft.fillRect(BOXSIZE, 0, BOXSIZE, BOXSIZE, ILI9341_YELLOW);
-//   tft.fillRect(BOXSIZE*2, 0, BOXSIZE, BOXSIZE, ILI9341_GREEN);
-//   tft.fillRect(BOXSIZE*3, 0, BOXSIZE, BOXSIZE, ILI9341_CYAN);
-//   tft.fillRect(BOXSIZE*4, 0, BOXSIZE, BOXSIZE, ILI9341_BLUE);
-//   tft.fillRect(BOXSIZE*5, 0, BOXSIZE, BOXSIZE, ILI9341_MAGENTA);
- 
-//   // select the current color 'red'
-//   tft.drawRect(0, 0, BOXSIZE, BOXSIZE, ILI9341_WHITE);
-//   currentcolor = ILI9341_RED;
-// }
-
-// void loop() {
-//   delay(10);
-//   // Wait for a touch
-//   if (! ctp.touched()) {
-//     return;
-//   }
-
-//   // Retrieve a point  
-//   TS_Point p = ctp.getPoint();
-  
-//  /*
-//   // Print out raw data from screen touch controller
-//   Serial.print("X = "); Serial.print(p.x);
-//   Serial.print("\tY = "); Serial.print(p.y);
-//   Serial.print(" -> ");
-//  */
-
-//   // flip it around to match the screen.
-//   p.x = map(p.x, 0, 240, 240, 0);
-//   p.y = map(p.y, 0, 320, 320, 0);
-
-//   // Print out the remapped (rotated) coordinates
-//   Serial.print("("); Serial.print(p.x);
-//   Serial.print(", "); Serial.print(p.y);
-//   Serial.println(")");
-  
-
-//   if (p.y < BOXSIZE) {
-//      oldcolor = currentcolor;
-
-//      if (p.x < BOXSIZE) { 
-//        currentcolor = ILI9341_RED; 
-//        tft.drawRect(0, 0, BOXSIZE, BOXSIZE, ILI9341_WHITE);
-//      } else if (p.x < BOXSIZE*2) {
-//        currentcolor = ILI9341_YELLOW;
-//        tft.drawRect(BOXSIZE, 0, BOXSIZE, BOXSIZE, ILI9341_WHITE);
-//      } else if (p.x < BOXSIZE*3) {
-//        currentcolor = ILI9341_GREEN;
-//        tft.drawRect(BOXSIZE*2, 0, BOXSIZE, BOXSIZE, ILI9341_WHITE);
-//      } else if (p.x < BOXSIZE*4) {
-//        currentcolor = ILI9341_CYAN;
-//        tft.drawRect(BOXSIZE*3, 0, BOXSIZE, BOXSIZE, ILI9341_WHITE);
-//      } else if (p.x < BOXSIZE*5) {
-//        currentcolor = ILI9341_BLUE;
-//        tft.drawRect(BOXSIZE*4, 0, BOXSIZE, BOXSIZE, ILI9341_WHITE);
-//      } else if (p.x <= BOXSIZE*6) {
-//        currentcolor = ILI9341_MAGENTA;
-//        tft.drawRect(BOXSIZE*5, 0, BOXSIZE, BOXSIZE, ILI9341_WHITE);
-//      }
-
-//      if (oldcolor != currentcolor) {
-//         if (oldcolor == ILI9341_RED) 
-//           tft.fillRect(0, 0, BOXSIZE, BOXSIZE, ILI9341_RED);
-//         if (oldcolor == ILI9341_YELLOW) 
-//           tft.fillRect(BOXSIZE, 0, BOXSIZE, BOXSIZE, ILI9341_YELLOW);
-//         if (oldcolor == ILI9341_GREEN) 
-//           tft.fillRect(BOXSIZE*2, 0, BOXSIZE, BOXSIZE, ILI9341_GREEN);
-//         if (oldcolor == ILI9341_CYAN) 
-//           tft.fillRect(BOXSIZE*3, 0, BOXSIZE, BOXSIZE, ILI9341_CYAN);
-//         if (oldcolor == ILI9341_BLUE) 
-//           tft.fillRect(BOXSIZE*4, 0, BOXSIZE, BOXSIZE, ILI9341_BLUE);
-//         if (oldcolor == ILI9341_MAGENTA) 
-//           tft.fillRect(BOXSIZE*5, 0, BOXSIZE, BOXSIZE, ILI9341_MAGENTA);
-//      }
-//   }
-//   if (((p.y-PENRADIUS) > BOXSIZE) && ((p.y+PENRADIUS) < tft.height())) {
-//     tft.fillCircle(p.x, p.y, PENRADIUS, currentcolor);
-//   }
-// }
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-// /*
-//   ESP32-S3 + ILI9341 TFT LCD Example
-
-//   https://wokwi.com/projects/343784047735997012
-// */
-
-// #include "SPI.h"
-// #include "Adafruit_GFX.h"
-// #include "Adafruit_ILI9341.h"
-
-// #define TFT_DC 2
-// #define TFT_CS 15
-// Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
-
-// void setup() {
-//   Serial.begin(115200); 
-//   Serial.println("Welcome to Wokwi, ESP32-S3");
-//   Wire.begin(10,8);
-//   tft.begin();
-
-//   tft.setCursor(44, 120);
-//   tft.setTextColor(ILI9341_RED);
-//   tft.setTextSize(3);
-//   tft.println("ESP32-S3");
-// }
-
-// const uint32_t colors[] = {
-//   ILI9341_GREEN,
-//   ILI9341_CYAN,
-//   ILI9341_MAGENTA,
-//   ILI9341_YELLOW,
-// };
-// uint8_t colorIndex = 0;
-
-// void loop() {
-//   tft.setTextSize(2);
-//   tft.setCursor(26, 164);
-//   tft.setTextColor(colors[colorIndex++ % 4]);
-//   tft.println("Welcome to Wokwi!");
-//   delay(250);
-// }
-
-
-
-
-
-
-
-
-
-
-
 // /*
 //   Adafruit LVGL Glue Example for pyportal (uses IL9341)
 //   https://github.com/adafruit/Adafruit_LvGL_Glue/blob/master/examples/hello_pyportal/hello_pyportal.ino
@@ -215,42 +32,44 @@
 
 #include <SPI.h>
 #include <Wire.h>
-//stop ZeroTimer error on esp32, not used but platformio fails to build anyway
-#define _ADAFRUIT_ZEROTIMER_
-//stop double touch definition by STMPE610 so we can switch to wokwi FT6206 i2c touch driver
-#define _ADAFRUIT_STMPE610H_
-class Adafruit_STMPE610 {
-  private:
-    uint8_t spiIn();
-    void spiOut(uint8_t x);
 
-    TwoWire *_wire;
-    SPIClass *_spi;
-    int8_t _CS, _MOSI, _MISO, _CLK;
-    uint8_t _i2caddr;
+////For now touch defined TP_Point occurs in both STMPE610 (in lvgl_GLUE) and FT6206, there are conflicts.
+// //stop ZeroTimer error on esp32, not used but platformio fails to build anyway
+// #define _ADAFRUIT_ZEROTIMER_
+// //stop double touch definition by STMPE610 so we can switch to wokwi FT6206 i2c touch driver
+// #define _ADAFRUIT_STMPE610H_
+// class Adafruit_STMPE610 {
+//   private:
+//     uint8_t spiIn();
+//     void spiOut(uint8_t x);
 
-    int m_spiMode;
+//     TwoWire *_wire;
+//     SPIClass *_spi;
+//     int8_t _CS, _MOSI, _MISO, _CLK;
+//     uint8_t _i2caddr;
+
+//     int m_spiMode;
 
     
-  public:
-    Adafruit_STMPE610(uint8_t cspin, uint8_t mosipin,
-                                        uint8_t misopin, uint8_t clkpin) {
-      _CS = cspin;
-      _MOSI = mosipin;
-      _MISO = misopin;
-      _CLK = clkpin;
-    }
-    Adafruit_STMPE610(uint8_t cspin, SPIClass *theSPI) {
-      _CS = cspin;
-      _MOSI = _MISO = _CLK = -1;
-      _spi = theSPI;
-    }
-    Adafruit_STMPE610(TwoWire *theWire) {
-      _CS = _MISO = _MOSI = _CLK = -1;
-      _wire = theWire;
-    }
+//   public:
+//     Adafruit_STMPE610(uint8_t cspin, uint8_t mosipin,
+//                                         uint8_t misopin, uint8_t clkpin) {
+//       _CS = cspin;
+//       _MOSI = mosipin;
+//       _MISO = misopin;
+//       _CLK = clkpin;
+//     }
+//     Adafruit_STMPE610(uint8_t cspin, SPIClass *theSPI) {
+//       _CS = cspin;
+//       _MOSI = _MISO = _CLK = -1;
+//       _spi = theSPI;
+//     }
+//     Adafruit_STMPE610(TwoWire *theWire) {
+//       _CS = _MISO = _MOSI = _CLK = -1;
+//       _wire = theWire;
+//     }
 
-};
+// };
 
 // #include <Arduino.h>      // this is needed for FT6206
 // #include <SPI.h>       // this is needed for display
@@ -269,8 +88,10 @@ class Adafruit_STMPE610 {
 // #define TFT_DC 9
 #define TFT_DC 2
 #define TFT_CS 15
+#define TFT_BACKLIGHT 6
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 
+//Original adafruit example pyportal pin definitions
 #define TFT_ROTATION   3 // Landscape orientation on PyPortal
 #define TFT_D0        34 // PyPortal TFT pins
 #define TFT_WR        26
@@ -278,7 +99,7 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 // #define TFT_CS        11
 #define TFT_RST       24
 #define TFT_RD         9
-#define TFT_BACKLIGHT 6 // 25
+// #define TFT_BACKLIGHT 25
 #define YP            A4 // PyPortal touchscreen pins
 #define XP            A5
 #define YM            A6
