@@ -1,209 +1,157 @@
-#include <Arduino.h>
+/**
+  ESP32s3 adaptation by Tyeth Gundry
+  Work in progress LVGL simple test.
 
-#include "SPI.h"
-#include "Adafruit_GFX.h"
-#include "Adafruit_ILI9341.h"
+  https://wokwi.com/projects/359264266487565313
+ */
+
+/***************************************************
+  This uses code written by Limor Fried/Ladyada for Adafruit Industries.
+  Adafruit invests time and resources providing this open source code,
+  please support Adafruit and open-source hardware by purchasing
+  products from Adafruit!
+ ****************************************************/
+
+
+// /*
+//   Adafruit LVGL Glue Example for pyportal (uses IL9341)
+//   https://github.com/adafruit/Adafruit_LvGL_Glue/blob/master/examples/hello_pyportal/hello_pyportal.ino
+// */
+///////////////////////////////////
+
+// Minimal "Hello" example for LittlevGL on Adafruit PyPortal. Requires
+// LittlevGL, Adafruit_LvGL_Glue, Adafruit Touchscreen, Adafruit_GFX and
+// Adafruit_ILI9341 (PyPortal, PyPortal Pynt) or Adafruit_HX8357 (PyPortal
+// Titano) libraries. This example doesn't use any touchscreen input, but
+// it's declared anyway so this sketch can be copied-and-pasted to serve
+// as a starting point for other projects. If display is scrambled, check
+// that the correct board is selected -- PyPortal vs PyPortal Titano.
+
+// Prior Adafruit_LvGL_Glue users: see hello_changes example for updates!
+#include "Arduino.h"
+
+#include <SPI.h>
 #include <Wire.h>
-#include "Adafruit_SPIDevice.h"
-#include <Adafruit_FT6206.h>
 
-#include "../lvgl/src/lvgl.h"
+////For now touch defined TP_Point occurs in both STMPE610 (in lvgl_GLUE) and FT6206, there are conflicts.
+// //stop ZeroTimer error on esp32, not used but platformio fails to build anyway
+// #define _ADAFRUIT_ZEROTIMER_
+// //stop double touch definition by STMPE610 so we can switch to wokwi FT6206 i2c touch driver
+// #define _ADAFRUIT_STMPE610H_
+// class Adafruit_STMPE610 {
+//   private:
+//     uint8_t spiIn();
+//     void spiOut(uint8_t x);
 
-  //#define TFT_DC     25
-  //#define TFT_CS      5
+//     TwoWire *_wire;
+//     SPIClass *_spi;
+//     int8_t _CS, _MOSI, _MISO, _CLK;
+//     uint8_t _i2caddr;
 
-#define _cs   5  // goes to TFT CS
-#define _dc   25  // goes to TFT DC
-#define _mosi 23  // goes to TFT MOSI
-#define _sclk 18  // goes to TFT SCK/CLK
+//     int m_spiMode;
 
-// If using the breakout, change pins as desired
-Adafruit_ILI9341 tft = Adafruit_ILI9341((int8_t)_cs, (int8_t)_dc, _mosi, _sclk);
+    
+//   public:
+//     Adafruit_STMPE610(uint8_t cspin, uint8_t mosipin,
+//                                         uint8_t misopin, uint8_t clkpin) {
+//       _CS = cspin;
+//       _MOSI = mosipin;
+//       _MISO = misopin;
+//       _CLK = clkpin;
+//     }
+//     Adafruit_STMPE610(uint8_t cspin, SPIClass *theSPI) {
+//       _CS = cspin;
+//       _MOSI = _MISO = _CLK = -1;
+//       _spi = theSPI;
+//     }
+//     Adafruit_STMPE610(TwoWire *theWire) {
+//       _CS = _MISO = _MOSI = _CLK = -1;
+//       _wire = theWire;
+//     }
 
-// For better pressure precision, we need to know the resistance
-// between X+ and X- Use any multimeter to read it
-// For the one I am using, it is 340 ohms across the X plate
-Adafruit_FT6206 ts = Adafruit_FT6206();
-TS_Point oldPoint;
+// };
 
-static lv_disp_buf_t disp_buf; //LVGL stuff;
-static lv_color_t buf[LV_HOR_RES_MAX * 10];
-lv_disp_drv_t disp_drv;
-lv_indev_drv_t indev_drv;
+// #include <Arduino.h>      // this is needed for FT6206
+// #include <SPI.h>       // this is needed for display
+#include <Adafruit_LvGL_Glue.h> // Always include this BEFORE lvgl.h!
+#include <lvgl.h>
+// #include <TouchScreen.h>
+#include <Adafruit_ILI9341.h>
 
-lv_obj_t * btn1;
-lv_obj_t * btn2;
-lv_obj_t *screenMain;
-lv_obj_t *label;
+////For now touch defined TP_Point occurs in both STMPE610 (in lvgl_GLUE) and FT6206...
+// #include <Adafruit_FT6206.h>
+// // The FT6206 uses hardware I2C (SCL/SDA)
+// Adafruit_FT6206 ctp = Adafruit_FT6206();
 
-static void event_handler_btn(lv_obj_t * obj, lv_event_t event){
-    Serial.println("event_handler_btn");
-    if(event == LV_EVENT_CLICKED) {
-        if (obj == btn1)
-        lv_label_set_text(label, "Hello");
-        else if (obj == btn2){
-          lv_label_set_text(label, "Goodbye");
-        }
-    }
+// // The display also uses hardware SPI, plus #9 & #10
+// #define TFT_CS 10
+// #define TFT_DC 9
+#define TFT_DC 2
+#define TFT_CS 15
+#define TFT_BACKLIGHT 6
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
+
+//Original adafruit example pyportal pin definitions
+#define TFT_ROTATION   3 // Landscape orientation on PyPortal
+#define TFT_D0        34 // PyPortal TFT pins
+#define TFT_WR        26
+// #define TFT_DC        10
+// #define TFT_CS        11
+#define TFT_RST       24
+#define TFT_RD         9
+// #define TFT_BACKLIGHT 25
+#define YP            A4 // PyPortal touchscreen pins
+#define XP            A5
+#define YM            A6
+#define XM            A7
+
+// #if defined(ADAFRUIT_PYPORTAL_M4_TITANO)
+//   #include <Adafruit_HX8357.h>
+//   Adafruit_HX8357  tft(tft8bitbus, TFT_D0, TFT_WR, TFT_DC, TFT_CS, TFT_RST,
+//     TFT_RD);
+// #else
+//   #include <Adafruit_ILI9341.h>
+//   Adafruit_ILI9341 tft(tft8bitbus, TFT_D0, TFT_WR, TFT_DC, TFT_CS, TFT_RST,
+//     TFT_RD);
+// #endif
+
+////Touch should come from i2c chip instead of analog pins(Adafruit_Touchscreen)
+//TouchScreen        ts(XP, YP, XM, YM, 300);
+
+Adafruit_LvGL_Glue glue;
+
+// This example sketch's LittlevGL UI-building calls are all in this
+// function rather than in setup(), so simple programs can just 
+// copy-and-paste this sketch as a starting point, then embellish here:
+void lvgl_setup(void) {
+  // Create simple label centered on screen
+  lv_obj_t *label = lv_label_create(lv_scr_act());
+  lv_label_set_text(label, "Hello Arduino!");
+  lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
 }
 
-void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
-{
-    uint32_t w = (area->x2 - area->x1 + 1);
-    uint32_t h = (area->y2 - area->y1 + 1);
-    uint32_t wh = w*h;
+void setup(void) {
+  Serial.begin(115200);
 
-    tft.startWrite();
-    tft.setAddrWindow(area->x1, area->y1, w, h);
-    while (wh--) tft.pushColor(color_p++->full);//for Adafruit library
-    tft.endWrite();
-
-    lv_disp_flush_ready(disp);
-}
-
-bool my_input_read(lv_indev_drv_t * drv, lv_indev_data_t*data)
-{
-
-    Serial.println("Click detected");
-    TS_Point p = ts.getPoint();
-  
-    data->state = LV_INDEV_STATE_PR;
-    data->point.x = p.x*240/1024; //we need to do some math to get x value between 0 and 239 (the width of the display).
-    data->point.y = p.y*320/1024; //we need to do some math to get x value between 0 and 319 (the height of the display).
-    oldPoint.x = p.x;
-    oldPoint.y = p.y;
-
-  return false; /*No buffering now so no more data read*/
-}
-
-
-void setup2(){
-
-  analogReadResolution(10);
-
-  oldPoint = ts.getPoint();
-
-  lv_init();
-
-  lv_disp_buf_init(&disp_buf, buf, NULL, LV_HOR_RES_MAX * 10);
-
-  /*Initialize the display*/
-  
-  lv_disp_drv_init(&disp_drv);
-  disp_drv.hor_res = 240;
-  disp_drv.ver_res = 320;
-  disp_drv.flush_cb = my_disp_flush;
-  disp_drv.buffer = &disp_buf;
-  lv_disp_drv_register(&disp_drv);
-
-  /*Initialize the input device driver*/
-  
-  lv_indev_drv_init(&indev_drv);             /*Descriptor of a input device driver*/
-  indev_drv.type = LV_INDEV_TYPE_POINTER;    /*Touch pad is a pointer-like device*/
-  indev_drv.read_cb = my_input_read;         /*Set your driver function*/
-  lv_indev_drv_register(&indev_drv);         /*Finally register the driver*/
-
-
-  screenMain = lv_obj_create(NULL, NULL);
-
-  label = lv_label_create(screenMain, NULL);
-  lv_label_set_long_mode(label, LV_LABEL_LONG_BREAK);
-  lv_label_set_text(label, "Press a button");
-  lv_label_set_align(label, LV_LABEL_ALIGN_CENTER);
-  lv_obj_set_size(label, 240, 40);
-  lv_obj_set_pos(label, 0, 15);
-
-  btn1 = lv_btn_create(screenMain, NULL);
-  lv_obj_set_event_cb(btn1, event_handler_btn);
-  lv_obj_set_width(btn1, 70);
-  lv_obj_set_height(btn1, 32);
-  lv_obj_set_pos(btn1, 32, 130);
-
-  lv_obj_t * label1 = lv_label_create(btn1, NULL);
-  lv_label_set_text(label1, "Hello");
-
-  btn2 = lv_btn_create(screenMain, NULL);
-  lv_obj_set_event_cb(btn2, event_handler_btn);
-  lv_obj_set_width(btn2, 70);
-  lv_obj_set_height(btn2, 32);
-  lv_obj_set_pos(btn2, 142, 130);
-
-  
-
-  lv_obj_t * label2 = lv_label_create(btn2, NULL);
-  lv_label_set_text(label2, "Goodbye");
-
-  static lv_style_t style1;
-  lv_style_init(&style1);
-  lv_style_set_text_color(&style1, LV_STATE_DEFAULT, LV_COLOR_GREEN);
-  lv_style_set_border_color(&style1, LV_STATE_DEFAULT, LV_COLOR_RED);
-  lv_style_set_border_width(&style1, LV_STATE_DEFAULT, 2);
-  lv_style_set_bg_color(&style1, LV_STATE_DEFAULT, LV_COLOR_YELLOW);
-  lv_style_set_bg_opa(&style1, LV_STATE_DEFAULT, 255);
-  lv_style_set_radius(&style1, LV_STATE_DEFAULT, 1);
-  
-
-  static lv_style_t style2;
-  lv_style_init(&style2);
-  lv_style_set_text_color(&style2, LV_STATE_DEFAULT, LV_COLOR_GRAY);
-  lv_style_set_border_color(&style2, LV_STATE_DEFAULT, lv_color_hex(0x222222));
-  lv_style_set_border_width(&style2, LV_STATE_DEFAULT, 1);
-  lv_style_set_bg_color(&style2, LV_STATE_DEFAULT, lv_color_hex(0x222222));
-  lv_style_set_bg_opa(&style2, LV_STATE_DEFAULT, 255);
-  lv_style_set_radius(&style2, LV_STATE_DEFAULT, 4);
-  lv_style_set_shadow_spread(&style2, LV_STATE_DEFAULT, 1);
-  lv_style_set_shadow_color(&style2, LV_STATE_DEFAULT, LV_COLOR_GRAY);
-  lv_style_set_shadow_opa(&style2, LV_STATE_DEFAULT, 255);
-  lv_style_set_shadow_width(&style2, LV_STATE_DEFAULT, 1);
-
-  static lv_style_t bigStyle;
-  lv_style_init(&bigStyle);
-  lv_style_set_text_font(&bigStyle ,LV_STATE_DEFAULT, &lv_font_montserrat_36);
-
-
-
-  lv_obj_add_style(label, LV_LABEL_PART_MAIN, &bigStyle);
-
-  //lv_obj_add_style(btn1, LV_LABEL_PART_MAIN, &style1);
-
-  //lv_obj_add_style(btn2, LV_LABEL_PART_MAIN, &style2);
-  
-
-  lv_scr_load(screenMain);
-}
-
-
-void setup() {
-  Serial.begin(9600);
-
-  while (!Serial)
-  {
-    sleep(300);
-  }
-  
-  Serial.println("Starting setup");
-
+  // Initialize display BEFORE glue setup
   tft.begin();
-  tft.setRotation(0);
-  
-  setup2();
-  
-  /*
-  tft.setCursor(0, 30);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  tft.print("Aircon status: ");
-  
-  tft.setCursor(0, 60);
-  tft.print("Aircon temp: ");
-  tft.print((char)247); // degree symbol
-  tft.println("C");
-  */
+  tft.setRotation(TFT_ROTATION);
+  pinMode(TFT_BACKLIGHT, OUTPUT);
+  digitalWrite(TFT_BACKLIGHT, HIGH);
 
+  // PyPortal touchscreen needs no init
+
+  // Initialize glue, passing in address of display & touchscreen
+  LvGLStatus status = glue.begin(&tft, false);//, &ctp);
+  if(status != LVGL_OK) {
+    Serial.printf("Glue error %d\r\n", (int)status);
+    for(;;);
+  }
+
+  lvgl_setup(); // Call UI-building function above
 }
 
-void loop() {
-
-  lv_task_handler();
-
-  delay(1);
+void loop(void) {
+  lv_task_handler(); // Call LittleVGL task handler periodically
+  delay(5);
 }
